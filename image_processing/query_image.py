@@ -36,11 +36,14 @@ eigenfaces = pca.components_
 # Calculate weights for the training set
 weights = eigenfaces @ (facematrix - pca.mean_).T
 
+# Define the threshold for positive/negative match
+threshold = 2500
+
 # Prepare CSV file for writing results
 output_csv_path = "facial_recognition_results.csv"
 with open(output_csv_path, mode='w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(["Query Image", "Best Match", "Euclidean Distance"])
+    writer.writerow(["Query Image", "Best Match", "Euclidean Distance", "Match Result"])
 
     # Test with one out-of-sample image from each class
     for i in range(1, 41):
@@ -51,5 +54,8 @@ with open(output_csv_path, mode='w', newline='') as file:
         best_match_index = np.argmin(euclidean_distance)
         best_match_distance = euclidean_distance[best_match_index]
 
+        # Determine if the match is positive or negative
+        match_result = "Positive" if best_match_distance < threshold else "Negative"
+
         # Write the results to the CSV file
-        writer.writerow([query_key, facelabel[best_match_index], best_match_distance])
+        writer.writerow([query_key, facelabel[best_match_index], best_match_distance, match_result])
