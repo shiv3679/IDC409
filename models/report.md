@@ -85,11 +85,13 @@ EXPOSE 5000
 CMD ["python", "app.py"]
 ```
 
-### Build and Run
+### Fetch the Docker Image
+
 ```bash
-docker build -t my-flask-app .
-docker run -p 5000:5000 my-flask-app
+docker pull shivshankarsinghdocker/sentence-predictor:latest
+docker run -d -p 5000:5000 shivshankarsinghdocker/sentence-predictor:latest
 ```
+
 
 ## Terminal Images
 
