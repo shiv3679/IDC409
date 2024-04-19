@@ -4,15 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentence Prediction</title>
-    <link href="/static/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+        function sendPredictionRequest(event) {
+            event.preventDefault(); // Prevent the default form submission
+            var xhr = new XMLHttpRequest();
+            var url = "/predict";
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    alert('Prediction: ' + json.prediction + ', Probability: ' + json.probability);
+                }
+            };
+            var data = JSON.stringify({"sentence": document.getElementById("sentence").value});
+            xhr.send(data);
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Predict Sentence</h1>
-        <form action="/predict" method="post">
-            <input type="text" name="sentence" id="sentence" placeholder="Enter a sentence">
-            <button type="submit">Predict</button>
-        </form>
+        <input type="text" id="sentence" placeholder="Enter a sentence">
+        <button onclick="sendPredictionRequest(event)">Predict</button>
     </div>
 </body>
 </html>
