@@ -1,36 +1,35 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, render_template, jsonify
 import joblib
 from sentence_transformers import SentenceTransformer
+import numpy as np
 import re
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
-# Load the trained logistic regression model
-lr_model = joblib.load('logistic_regression_model.pkl')
-
-# Load the sentence embedding model
+# Load models and scaler
+rf_model = joblib.load('random_forest_model.pkl')
+scaler = joblib.load('scaler.pkl')
 sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
-
-# Load the LabelEncoder
 label_encoder = joblib.load('label_encoder.pkl')
 
 def clean_text(text):
-    """Preprocess text by lowercasing and removing non-alphanumeric characters"""
     return re.sub(r'[^\w\s]', '', text.lower().strip())
+
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json(force=True)
-    if 'sentence' in data:
-        # Preprocess the sentence
-        cleaned_sentence = clean_text(data['sentence'])
-        # Generate embeddings
+    sentence = request.form['sentence']
+    if sentence:
+        cleaned_sentence = clean_text(sentence)
         sentence_embedding = sentence_model.encode([cleaned_sentence])
-        # Make prediction
-        numeric_prediction = lr_model.predict(sentence_embedding)
-        # Decode the numeric prediction back to original label
-        decoded_prediction = label_encoder.inverse_transform(numeric_prediction)[0]
-        return jsonify(prediction=decoded_prediction)
+        sentence_embedding = scaler.transform(sentence_embedding)
+        prediction_prob = rf_model.predict_proba(sentence_embedding)[:, 1][0]
+        numeric_prediction = rf_model.predict(sentence_embedding)[0]
+        decoded_prediction = label_encoder.inverse_transform([numeric_prediction])[0]
+        return jsonify(prediction=decoded_prediction, probability=float(prediction_prob))
     else:
         return jsonify({"error": "No sentence provided"}), 400
 
